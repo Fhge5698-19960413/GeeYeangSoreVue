@@ -30,12 +30,9 @@ async function sendMessage() {
 
 async function getBotAnswer(question) {
   try {
-    const response = await axios.post('https://llm.jayceeswlrorobot.win/v1/chat/completions', {
+    const response = await axios.post('http://localhost:11434/api/generate', {
       model: 'gemma3:4b',
-      messages: [
-        {
-          role: 'user',
-          content: `
+      prompt: `
 你是一個專業的客服機器人，租屋網站名稱為「居研所」，請用親切且清楚的繁體中文回答使用者的問題。
 
 ---
@@ -107,15 +104,17 @@ Email : support@ju-yan.com
 
 ---
 使用者問題：${question}
-`
-
-        }
-      ],
-      max_tokens: 500
+`,
+      stream: false,
+      num_ctx: 2048,        // 限制上下文長度
+      num_thread: 4,        // 使用 4 個 CPU 線程
+      temperature: 0.7,     // 降低隨機性，使回應更穩定
+      top_k: 40,           // 限制詞彙選擇範圍
+      top_p: 0.9,          // 控制詞彙選擇的機率閾值
+      repeat_penalty: 1.1   // 輕微懲罰重複內容
     });
 
-    const reply = response.data.choices[0].message.content;
-    return reply;
+    return response.data.response;
 
   } catch (error) {
     if (error.response) {
